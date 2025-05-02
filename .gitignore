@@ -1,0 +1,60 @@
+# 依赖包
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# 环境变量
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# 日志
+logs/
+*.log
+
+# 运行时数据
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# 测试覆盖率
+coverage/
+.nyc_output/
+
+# 构建输出
+build/
+dist/
+
+# 上传的文件
+uploads/
+public/uploads/
+
+# 临时文件
+tmp/
+temp/
+
+# IDE和编辑器
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+.directory
+.project
+.settings/
+.classpath
+.history
+
+# MongoDB数据文件
+data/
+*.bak
+
+# 系统文件
+Thumbs.db
+desktop.ini 
