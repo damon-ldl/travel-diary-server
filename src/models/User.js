@@ -6,7 +6,7 @@ const UserSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  email: {
+  nickname: {
     type: String,
     required: true,
     unique: true
@@ -15,9 +15,9 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  avatar: {
+  avatarUrl: {
     type: String,
-    default: ''
+    default: '/images/avatar-default.png'
   },
   role: {
     type: String,

@@ -8,8 +8,14 @@ const auth = require('../middlewares/auth');
 // @access  Private
 router.post('/', auth, upload.array('files', 10), (req, res) => {
   try {
-    if(!req.files) {
-      return res.status(400).json({ msg: '没有上传文件' });
+    console.log('上传文件请求：', {
+      hasFiles: !!req.files,
+      fileCount: req.files ? req.files.length : 0,
+      body: req.body
+    });
+    
+    if(!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: '没有上传文件' });
     }
     
     // 返回文件路径数组
@@ -17,8 +23,8 @@ router.post('/', auth, upload.array('files', 10), (req, res) => {
     
     res.json({ filePaths });
   } catch(err) {
-    console.error(err.message);
-    res.status(500).send('服务器错误');
+    console.error('文件上传错误:', err.message);
+    res.status(500).send({ error: '服务器错误', message: err.message });
   }
 });
 

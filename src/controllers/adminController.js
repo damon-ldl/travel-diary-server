@@ -1,86 +1,184 @@
+const Diary = require('../models/Diary');
 const User = require('../models/User');
-const Post = require('../models/Post');
 
-// 获取所有待审核游记
-exports.getPendingPosts = async (req, res) => {
+/**
+ * @swagger
+ * /api/admin/diaries:
+ *   get:
+ *     summary: 获取待审核游记列表（管理员）
+ *     tags: [管理员]
+ *     security:
+ *       - bearerAuth: []
+ */
+exports.getDiaries = async (req, res) => {
   try {
-    // 确保请求者是管理员
+    // 验证是否有管理员权限
     if (req.user.role !== 'admin') {
-      return res.status(403).json({ msg: '无权访问管理员功能' });
+      return res.status(403).json({ error: '需要管理员权限' });
     }
 
-    const posts = await Post.find({ status: 'pending' })
-      .sort({ createdAt: -1 })
-      .populate('author', ['username', 'avatar']);
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const status = req.query.status || null;
     
-    res.json(posts);
+    const skip = (page - 1) * pageSize;
+    
+    let query = {};
+    if (status) {
+      query.status = status;
+    }
+    
+    const total = await Diary.countDocuments(query);
+    
+    const diaries = await Diary.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(pageSize)
+      .populate('author', ['nickname']);
+    
+    // 格式化响应
+    const formattedDiaries = diaries.map(diary => ({
+      id: diary._id,
+      title: diary.title,
+      author: {
+        id: diary.author._id,
+        nickname: diary.author.nickname
+      },
+      status: diary.status,
+      reason: diary.status === 'rejected' ? diary.reason : undefined
+    }));
+    
+    res.json({
+      total,
+      page,
+      pageSize,
+      diaries: formattedDiaries
+    });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('服务器错误');
+    res.status(500).json({ error: '服务器错误' });
   }
 };
 
-// 批准游记
-exports.approvePost = async (req, res) => {
+/**
+ * @swagger
+ * /api/admin/diaries/{id}/approve:
+ *   put:
+ *     summary: 审核通过游记（管理员）
+ *     tags: [管理员]
+ *     security:
+ *       - bearerAuth: []
+ */
+exports.approveDiary = async (req, res) => {
   try {
-    // 确保请求者是管理员
+    // 验证是否有管理员权限
     if (req.user.role !== 'admin') {
-      return res.status(403).json({ msg: '无权访问管理员功能' });
+      return res.status(403).json({ error: '需要管理员权限' });
     }
 
-    const post = await Post.findById(req.params.id);
+    const diary = await Diary.findById(req.params.id);
     
-    if (!post) {
-      return res.status(404).json({ msg: '游记不存在' });
+    if (!diary) {
+      return res.status(404).json({ error: '游记不存在' });
     }
-
-    post.status = 'approved';
-    post.rejectReason = '';
     
-    await post.save();
+    diary.status = 'approved';
+    await diary.save();
     
-    res.json(post);
+    res.json({
+      id: diary._id,
+      status: diary.status
+    });
   } catch (err) {
     console.error(err.message);
     if (err.kind === 'ObjectId') {
-      return res.status(404).json({ msg: '游记不存在' });
+      return res.status(404).json({ error: '游记不存在' });
     }
-    res.status(500).send('服务器错误');
+    res.status(500).json({ error: '服务器错误' });
   }
 };
 
-// 拒绝游记
-exports.rejectPost = async (req, res) => {
+/**
+ * @swagger
+ * /api/admin/diaries/{id}/reject:
+ *   put:
+ *     summary: 审核拒绝游记（管理员）
+ *     tags: [管理员]
+ *     security:
+ *       - bearerAuth: []
+ */
+exports.rejectDiary = async (req, res) => {
   try {
-    // 确保请求者是管理员
+    // 验证是否有管理员权限
     if (req.user.role !== 'admin') {
-      return res.status(403).json({ msg: '无权访问管理员功能' });
+      return res.status(403).json({ error: '需要管理员权限' });
     }
 
     const { reason } = req.body;
     
     if (!reason) {
-      return res.status(400).json({ msg: '请提供拒绝理由' });
+      return res.status(400).json({ error: '缺少拒绝原因' });
     }
 
-    const post = await Post.findById(req.params.id);
+    const diary = await Diary.findById(req.params.id);
     
-    if (!post) {
-      return res.status(404).json({ msg: '游记不存在' });
+    if (!diary) {
+      return res.status(404).json({ error: '游记不存在' });
     }
-
-    post.status = 'rejected';
-    post.rejectReason = reason;
     
-    await post.save();
+    diary.status = 'rejected';
+    diary.reason = reason;
+    await diary.save();
     
-    res.json(post);
+    res.json({
+      id: diary._id,
+      status: diary.status,
+      reason: diary.reason
+    });
   } catch (err) {
     console.error(err.message);
     if (err.kind === 'ObjectId') {
-      return res.status(404).json({ msg: '游记不存在' });
+      return res.status(404).json({ error: '游记不存在' });
     }
-    res.status(500).send('服务器错误');
+    res.status(500).json({ error: '服务器错误' });
+  }
+};
+
+/**
+ * @swagger
+ * /api/admin/diaries/{id}:
+ *   delete:
+ *     summary: 逻辑删除游记（管理员）
+ *     tags: [管理员]
+ *     security:
+ *       - bearerAuth: []
+ */
+exports.deleteDiary = async (req, res) => {
+  try {
+    // 验证是否有管理员权限
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: '需要管理员权限' });
+    }
+
+    const diary = await Diary.findById(req.params.id);
+    
+    if (!diary) {
+      return res.status(404).json({ error: '游记不存在或已被删除' });
+    }
+    
+    diary.status = 'deleted';
+    await diary.save();
+    
+    res.json({
+      id: diary._id,
+      status: diary.status
+    });
+  } catch (err) {
+    console.error(err.message);
+    if (err.kind === 'ObjectId') {
+      return res.status(404).json({ error: '游记不存在' });
+    }
+    res.status(500).json({ error: '服务器错误' });
   }
 };
 

@@ -10,7 +10,20 @@ const app = express();
 
 // 中间件
 app.use(express.json());
-app.use(cors());
+// 配置CORS，允许特定域名访问API
+app.use(cors({
+  origin: [
+    'http://localhost:10086',
+    'http://localhost:3000',
+    'http://169.254.236.213:10086', // 添加移动端开发服务器域名
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // 允许携带凭证
+}));
+
+// 预检请求响应
+app.options('*', cors());
 
 // 连接到MongoDB
 mongoose.connect(config.mongoURI, {
@@ -27,13 +40,13 @@ mongoose.connect(config.mongoURI, {
 
 // 导入路由
 const authRoutes = require('./routes/auth');
-const postsRoutes = require('./routes/posts');
+const diariesRoutes = require('./routes/diaries');
 const adminRoutes = require('./routes/admin');
 const uploadRoutes = require('./routes/upload');
 
 // 使用路由
 app.use('/api/auth', authRoutes);
-app.use('/api/posts', postsRoutes);
+app.use('/api/diaries', diariesRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 
@@ -51,7 +64,7 @@ app.get('/api/status', (req, res) => {
 // 错误处理中间件
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send({ message: '服务器内部错误', error: err.message });
+  res.status(500).send({ error: '服务器内部错误', message: err.message });
 });
 
 module.exports = app; 

@@ -119,7 +119,7 @@ mkdir uploads
 4. 授权后即可测试需要认证的接口
 
 ### 其他文档
-详细的API接口文档请查看 [API-DOCS.md](./API-DOCS.md)
+详细的API接口文档请查看 [api-docs.md](./api-docs.md)
 
 ## 项目结构
 
@@ -181,7 +181,9 @@ server/               # 后端服务器项目根目录
 
 ## 联系方式
 
-项目维护者：[黎栋梁] - [cassielldl@gmail.com](mailto:cassielldl@gmail.com)
+项目维护者：[dongliangli] - [cassielldl@gmail.com](mailto:cassielldl@gmail.com)
+
+项目维护者：[junsun] - [a2019124741@gmail.com](mailto:a2019124741@gmail.com)
 
 ---
 

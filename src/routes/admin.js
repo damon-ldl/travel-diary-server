@@ -3,20 +3,49 @@ const router = express.Router();
 const adminController = require('../controllers/adminController');
 const auth = require('../middlewares/auth');
 
-// @route   GET /api/admin/posts/pending
-// @desc    获取所有待审核游记
-// @access  Private (admin only)
-router.get('/posts/pending', auth, adminController.getPendingPosts);
+/**
+ * @swagger
+ * /api/admin/diaries:
+ *   get:
+ *     summary: 获取待审核游记列表（管理员）
+ *     tags: [管理员]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.get('/diaries', auth, adminController.getDiaries);
 
-// @route   PUT /api/admin/posts/:id/approve
-// @desc    批准游记
-// @access  Private (admin only)
-router.put('/posts/:id/approve', auth, adminController.approvePost);
+/**
+ * @swagger
+ * /api/admin/diaries/{id}/approve:
+ *   put:
+ *     summary: 审核通过游记（管理员）
+ *     tags: [管理员]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.put('/diaries/:id/approve', auth, adminController.approveDiary);
 
-// @route   PUT /api/admin/posts/:id/reject
-// @desc    拒绝游记
-// @access  Private (admin only)
-router.put('/posts/:id/reject', auth, adminController.rejectPost);
+/**
+ * @swagger
+ * /api/admin/diaries/{id}/reject:
+ *   put:
+ *     summary: 审核拒绝游记（管理员）
+ *     tags: [管理员]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.put('/diaries/:id/reject', auth, adminController.rejectDiary);
+
+/**
+ * @swagger
+ * /api/admin/diaries/{id}:
+ *   delete:
+ *     summary: 逻辑删除游记（管理员）
+ *     tags: [管理员]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.delete('/diaries/:id', auth, adminController.deleteDiary);
 
 // @route   GET /api/admin/users
 // @desc    获取所有用户

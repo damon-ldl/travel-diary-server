@@ -3,27 +3,62 @@ const jwt = require('jsonwebtoken');
 const config = require('../../config');
 const User = require('../models/User');
 
-// 用户注册
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: 用户注册
+ *     tags: [认证]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *               - nickname
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               nickname:
+ *                 type: string
+ *               avatar:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: 注册成功
+ */
 exports.register = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-
+    const { username, password, nickname } = req.body;
+    
     // 检查用户是否已存在
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ username });
     if (user) {
-      return res.status(400).json({ msg: '该邮箱已被注册' });
+      return res.status(400).json({ error: '用户名已被使用' });
     }
 
-    user = await User.findOne({ username });
+    user = await User.findOne({ nickname });
     if (user) {
-      return res.status(400).json({ msg: '该用户名已被使用' });
+      return res.status(400).json({ error: '昵称已被占用' });
+    }
+    
+    // 处理头像文件
+    let avatarUrl = '/images/avatar-default.png';
+    if (req.file) {
+      avatarUrl = `/uploads/${req.file.filename}`;
     }
 
     // 创建新用户
     user = new User({
       username,
-      email,
-      password
+      nickname,
+      password,
+      avatarUrl
     });
 
     // 加密密码
@@ -32,44 +67,57 @@ exports.register = async (req, res) => {
 
     await user.save();
 
-    // 创建JWT
-    const payload = {
-      user: {
-        id: user.id,
-        role: user.role
-      }
-    };
-
-    jwt.sign(
-      payload,
-      config.jwtSecret,
-      { expiresIn: '7d' },
-      (err, token) => {
-        if (err) throw err;
-        res.json({ token });
-      }
-    );
+    // 按规范返回用户信息
+    res.json({
+      id: user.id,
+      username: user.username,
+      nickname: user.nickname,
+      avatarUrl: user.avatarUrl
+    });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('服务器错误');
+    res.status(500).json({ error: '服务器错误' });
   }
 };
 
-// 用户登录
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: 用户登录
+ *     tags: [认证]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: 登录成功，返回token
+ */
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
     // 检查用户是否存在
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ username });
     if (!user) {
-      return res.status(400).json({ msg: '用户不存在' });
+      return res.status(400).json({ error: '用户名或密码错误' });
     }
 
     // 验证密码
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ msg: '密码错误' });
+      return res.status(400).json({ error: '用户名或密码错误' });
     }
 
     // 创建JWT
@@ -83,25 +131,46 @@ exports.login = async (req, res) => {
     jwt.sign(
       payload,
       config.jwtSecret,
-      { expiresIn: '7d' },
+      { expiresIn: config.jwtExpire },
       (err, token) => {
         if (err) throw err;
-        res.json({ token });
+        // 按规范返回用户信息和token
+        res.json({
+          id: user.id,
+          username: user.username,
+          nickname: user.nickname,
+          avatarUrl: user.avatarUrl,
+          token
+        });
       }
     );
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('服务器错误');
+    res.status(500).json({ error: '服务器错误' });
   }
 };
 
-// 获取当前用户信息
+/**
+ * @swagger
+ * /api/auth/me:
+ *   get:
+ *     summary: 获取当前用户信息
+ *     tags: [认证]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 成功获取用户信息
+ */
 exports.getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ error: '用户不存在' });
+    }
     res.json(user);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('服务器错误');
+    res.status(500).json({ error: '服务器错误' });
   }
 }; 

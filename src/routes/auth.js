@@ -2,12 +2,13 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const auth = require('../middlewares/auth');
+const upload = require('../utils/fileUpload');
 
 /**
  * @swagger
  * /api/auth/register:
  *   post:
- *     summary: 注册新用户
+ *     summary: 用户注册
  *     tags: [认证]
  *     requestBody:
  *       required: true
@@ -17,37 +18,54 @@ const auth = require('../middlewares/auth');
  *             type: object
  *             required:
  *               - username
- *               - email
  *               - password
+ *               - nickname
  *             properties:
  *               username:
  *                 type: string
- *                 description: 用户名
- *               email:
- *                 type: string
- *                 format: email
- *                 description: 邮箱地址
+ *                 description: 用户名，需唯一
  *               password:
  *                 type: string
  *                 format: password
  *                 description: 密码
+ *               nickname:
+ *                 type: string
+ *                 description: 用户昵称，需唯一
+ *               avatar:
+ *                 type: string
+ *                 description: 用户头像文件
  *     responses:
  *       200:
- *         description: 注册成功，返回JWT令牌
+ *         description: 注册成功
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 token:
+ *                 id:
  *                   type: string
- *                   description: JWT令牌
+ *                   description: 用户ID
+ *                 username:
+ *                   type: string
+ *                   description: 用户名
+ *                 nickname:
+ *                   type: string
+ *                   description: 用户昵称
+ *                 avatarUrl:
+ *                   type: string
+ *                   description: 头像URL
  *       400:
- *         description: 请求错误，如邮箱已注册或用户名已使用
- *       500:
- *         description: 服务器错误
+ *         description: 请求错误
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: 错误信息
  */
-router.post('/register', authController.register);
+router.post('/register', upload.single('avatar'), authController.register);
 
 /**
  * @swagger
@@ -62,38 +80,55 @@ router.post('/register', authController.register);
  *           schema:
  *             type: object
  *             required:
- *               - email
+ *               - username
  *               - password
  *             properties:
- *               email:
+ *               username:
  *                 type: string
- *                 format: email
- *                 description: 邮箱地址
+ *                 description: 用户名
  *               password:
  *                 type: string
  *                 format: password
  *                 description: 密码
  *     responses:
  *       200:
- *         description: 登录成功，返回JWT令牌
+ *         description: 登录成功
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
+ *                 id:
+ *                   type: string
+ *                   description: 用户ID
+ *                 username:
+ *                   type: string
+ *                   description: 用户名
+ *                 nickname:
+ *                   type: string
+ *                   description: 用户昵称
+ *                 avatarUrl:
+ *                   type: string
+ *                   description: 头像URL
  *                 token:
  *                   type: string
- *                   description: JWT令牌
+ *                   description: 认证令牌
  *       400:
- *         description: 登录失败，如用户不存在或密码错误
- *       500:
- *         description: 服务器错误
+ *         description: 登录失败
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   description: 错误信息
  */
 router.post('/login', authController.login);
 
 /**
  * @swagger
- * /api/auth/user:
+ * /api/auth/me:
  *   get:
  *     summary: 获取当前用户信息
  *     tags: [认证]
@@ -113,24 +148,18 @@ router.post('/login', authController.login);
  *                 username:
  *                   type: string
  *                   description: 用户名
- *                 email:
+ *                 nickname:
  *                   type: string
- *                   description: 邮箱地址
- *                 avatar:
+ *                   description: 用户昵称
+ *                 avatarUrl:
  *                   type: string
- *                   description: 头像地址
+ *                   description: 头像URL
  *                 role:
  *                   type: string
  *                   description: 用户角色
- *                 createdAt:
- *                   type: string
- *                   format: date-time
- *                   description: 创建时间
  *       401:
- *         description: 未授权，token无效或已过期
- *       500:
- *         description: 服务器错误
+ *         description: 未授权，token无效
  */
-router.get('/user', auth, authController.getCurrentUser);
+router.get('/me', auth, authController.getCurrentUser);
 
 module.exports = router; 
