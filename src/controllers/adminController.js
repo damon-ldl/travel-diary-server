@@ -7,16 +7,11 @@ const User = require('../models/User');
  *   get:
  *     summary: 获取待审核游记列表（管理员）
  *     tags: [管理员]
- *     security:
- *       - bearerAuth: []
  */
 exports.getDiaries = async (req, res) => {
   try {
-    // 验证是否有管理员权限
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: '需要管理员权限' });
-    }
-
+    // 不再验证管理员权限
+    
     const page = parseInt(req.query.page) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
     const status = req.query.status || null;
@@ -66,15 +61,10 @@ exports.getDiaries = async (req, res) => {
  *   put:
  *     summary: 审核通过游记（管理员）
  *     tags: [管理员]
- *     security:
- *       - bearerAuth: []
  */
 exports.approveDiary = async (req, res) => {
   try {
-    // 验证是否有管理员权限
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: '需要管理员权限' });
-    }
+
 
     const diary = await Diary.findById(req.params.id);
     
@@ -104,15 +94,10 @@ exports.approveDiary = async (req, res) => {
  *   put:
  *     summary: 审核拒绝游记（管理员）
  *     tags: [管理员]
- *     security:
- *       - bearerAuth: []
  */
 exports.rejectDiary = async (req, res) => {
   try {
-    // 验证是否有管理员权限
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: '需要管理员权限' });
-    }
+
 
     const { reason } = req.body;
     
@@ -150,15 +135,10 @@ exports.rejectDiary = async (req, res) => {
  *   delete:
  *     summary: 逻辑删除游记（管理员）
  *     tags: [管理员]
- *     security:
- *       - bearerAuth: []
  */
 exports.deleteDiary = async (req, res) => {
   try {
-    // 验证是否有管理员权限
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: '需要管理员权限' });
-    }
+    // 不再验证管理员权限
 
     const diary = await Diary.findById(req.params.id);
     
@@ -182,13 +162,10 @@ exports.deleteDiary = async (req, res) => {
   }
 };
 
-// 获取所有用户列表（管理员功能）
+// 获取所有用户列表
 exports.getUsers = async (req, res) => {
   try {
-    // 确保请求者是管理员
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ msg: '无权访问管理员功能' });
-    }
+    // 不再验证管理员权限
 
     const users = await User.find().select('-password');
     res.json(users);
@@ -201,10 +178,7 @@ exports.getUsers = async (req, res) => {
 // 设置/取消用户的管理员权限
 exports.updateUserRole = async (req, res) => {
   try {
-    // 确保请求者是管理员
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ msg: '无权访问管理员功能' });
-    }
+    // 不再验证管理员权限
 
     const { role } = req.body;
     

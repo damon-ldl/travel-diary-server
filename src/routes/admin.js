@@ -9,10 +9,8 @@ const auth = require('../middlewares/auth');
  *   get:
  *     summary: 获取待审核游记列表（管理员）
  *     tags: [管理员]
- *     security:
- *       - bearerAuth: []
  */
-router.get('/diaries', auth, adminController.getDiaries);
+router.get('/diaries', adminController.getDiaries);
 
 /**
  * @swagger
@@ -20,10 +18,8 @@ router.get('/diaries', auth, adminController.getDiaries);
  *   put:
  *     summary: 审核通过游记（管理员）
  *     tags: [管理员]
- *     security:
- *       - bearerAuth: []
  */
-router.put('/diaries/:id/approve', auth, adminController.approveDiary);
+router.put('/diaries/:id/approve', adminController.approveDiary);
 
 /**
  * @swagger
@@ -31,10 +27,8 @@ router.put('/diaries/:id/approve', auth, adminController.approveDiary);
  *   put:
  *     summary: 审核拒绝游记（管理员）
  *     tags: [管理员]
- *     security:
- *       - bearerAuth: []
  */
-router.put('/diaries/:id/reject', auth, adminController.rejectDiary);
+router.put('/diaries/:id/reject', adminController.rejectDiary);
 
 /**
  * @swagger
@@ -42,19 +36,17 @@ router.put('/diaries/:id/reject', auth, adminController.rejectDiary);
  *   delete:
  *     summary: 逻辑删除游记（管理员）
  *     tags: [管理员]
- *     security:
- *       - bearerAuth: []
  */
-router.delete('/diaries/:id', auth, adminController.deleteDiary);
+router.delete('/diaries/:id', adminController.deleteDiary);
 
 // @route   GET /api/admin/users
 // @desc    获取所有用户
-// @access  Private (admin only)
-router.get('/users', auth, adminController.getUsers);
+// @access  Public
+router.get('/users', adminController.getUsers);
 
 // @route   PUT /api/admin/users/:id/role
 // @desc    更新用户角色
-// @access  Private (admin only)
-router.put('/users/:id/role', auth, adminController.updateUserRole);
+// @access  Public
+router.put('/users/:id/role', adminController.updateUserRole);
 
 module.exports = router; 
