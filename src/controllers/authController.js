@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../../config');
 const User = require('../models/User');
+const { getFullUrl } = require('../utils/urlHelper');
 
 /**
  * @swagger
@@ -34,6 +35,12 @@ const User = require('../models/User');
  */
 exports.register = async (req, res) => {
   try {
+    console.log('注册请求信息:', {
+      body: req.body,
+      file: req.file,
+      headers: req.headers
+    });
+    
     const { username, password, nickname } = req.body;
     
     // 检查用户是否已存在
@@ -48,9 +55,9 @@ exports.register = async (req, res) => {
     }
     
     // 处理头像文件
-    let avatarUrl = '/images/avatar-default.png';
+    let avatarUrl = '/uploads/media/default/avatar-default.jpg';
     if (req.file) {
-      avatarUrl = `/uploads/${req.file.filename}`;
+      avatarUrl = `/uploads/media/avatars/${req.file.filename}`;
     }
 
     // 创建新用户
@@ -72,7 +79,7 @@ exports.register = async (req, res) => {
       id: user.id,
       username: user.username,
       nickname: user.nickname,
-      avatarUrl: user.avatarUrl
+      avatarUrl: getFullUrl(user.avatarUrl)
     });
   } catch (err) {
     console.error(err.message);
@@ -108,7 +115,7 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // 检查用户是否存在
+    // 查找用户
     const user = await User.findOne({ username });
     if (!user) {
       return res.status(400).json({ error: '用户名或密码错误' });
@@ -120,7 +127,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: '用户名或密码错误' });
     }
 
-    // 创建JWT
+    // 生成JWT令牌
     const payload = {
       user: {
         id: user.id,
@@ -134,12 +141,12 @@ exports.login = async (req, res) => {
       { expiresIn: config.jwtExpire },
       (err, token) => {
         if (err) throw err;
-        // 按规范返回用户信息和token
         res.json({
           id: user.id,
           username: user.username,
           nickname: user.nickname,
-          avatarUrl: user.avatarUrl,
+          avatarUrl: getFullUrl(user.avatarUrl),
+          role: user.role,
           token
         });
       }
@@ -168,7 +175,14 @@ exports.getCurrentUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: '用户不存在' });
     }
-    res.json(user);
+    
+    res.json({
+      id: user.id,
+      username: user.username,
+      nickname: user.nickname,
+      avatarUrl: getFullUrl(user.avatarUrl),
+      role: user.role
+    });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: '服务器错误' });

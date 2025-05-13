@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const diaryController = require('../controllers/diaryController');
 const auth = require('../middlewares/auth');
+const optionalAuth = require('../middlewares/optionalAuth');
 const upload = require('../utils/fileUpload');
 
 /**
@@ -45,7 +46,7 @@ router.get('/my', auth, diaryController.getMyDiaries);
  *     summary: 获取游记详情
  *     tags: [游记]
  */
-router.get('/:id', diaryController.getDiaryById);
+router.get('/:id', optionalAuth, diaryController.getDiaryById);
 
 /**
  * @swagger

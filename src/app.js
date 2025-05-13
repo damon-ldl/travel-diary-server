@@ -10,21 +10,35 @@ const app = express();
 
 // 中间件
 app.use(express.json());
-// 配置CORS，允许特定域名访问API
-app.use(cors({
-  origin: [
-    'http://localhost:10086',
-    'http://localhost:3000',
-    'http://169.254.236.213:10086', // 添加移动端开发服务器域名
-    'http://10.99.128.5:10086', // 添加当前开发服务器域名
-  ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // 允许携带凭证
-}));
 
-// 预检请求响应
-app.options('*', cors());
+// 配置CORS
+app.use((req, res, next) => {
+  // 允许所有来源访问
+  const origin = req.headers.origin;
+  res.header('Access-Control-Allow-Origin', origin);
+  
+  // 允许携带凭证
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  // 允许的请求方法
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  
+  // 允许的请求头
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  // 预检请求缓存时间
+  res.header('Access-Control-Max-Age', '86400');
+  
+  // 额外的响应头
+  res.header('Access-Control-Expose-Headers', 'Content-Range, X-Content-Range');
+
+  // 处理预检请求
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
 
 // 连接到MongoDB
 mongoose.connect(config.mongoURI, {
@@ -56,6 +70,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 设置静态文件夹
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads/media', express.static(path.join(__dirname, '../uploads/media')));
+app.use('/images', express.static(path.join(__dirname, '../public/images')));
 
 // 定义API服务器状态检查路由
 app.get('/api/status', (req, res) => {
@@ -66,6 +82,14 @@ app.get('/api/status', (req, res) => {
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send({ error: '服务器内部错误', message: err.message });
+});
+
+// 启动服务器
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`服务器运行在 http://localhost:${PORT}`);
+  console.log(`API文档地址: http://localhost:${PORT}/api-docs`);
+  console.log(`静态文件访问示例: http://localhost:${PORT}/uploads/sample/beijing1.jpg`);
 });
 
 module.exports = app; 

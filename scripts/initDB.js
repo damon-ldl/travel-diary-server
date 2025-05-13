@@ -47,7 +47,8 @@ const createAdmin = async () => {
       username: 'admin',
       nickname: 'Administrator',
       password: hashedPassword,
-      role: 'admin'
+      role: 'admin',
+      avatarUrl: '/uploads/media/default/avatar-default.jpg'
     });
     
     await admin.save();
@@ -70,14 +71,16 @@ const createUsers = async () => {
       username: 'user1',
       nickname: 'User One',
       password: await bcrypt.hash('user123', salt),
-      role: 'user'
+      role: 'user',
+      avatarUrl: '/uploads/media/avatars/user1-avatar.jpg'
     });
     
     const user2 = new User({
       username: 'user2',
       nickname: 'User Two',
       password: await bcrypt.hash('user123', salt),
-      role: 'user'
+      role: 'user',
+      avatarUrl: '/uploads/media/avatars/user2-avatar.jpg'
     });
     
     await user1.save();
@@ -97,9 +100,9 @@ const createSamplePosts = async (users) => {
     // 为user1创建一个已批准的游记
     const post1 = new Diary({
       title: '北京之旅',
-      content: '这是一次难忘的北京旅行，参观了长城、故宫和天坛等著名景点。',
-      images: ['/uploads/sample-beijing1.jpg', '/uploads/sample-beijing2.jpg'],
-      videoUrl: null,  // 使用正确的字段名
+      content: '这是一次难忘的北京旅行，参观了长城、故宫和天坛等著名景点。长城是世界七大奇迹之一，它不仅是一项伟大的工程，更是中华民族不屈不挠精神的象征。故宫作为明清两代的皇家宫殿，它的建筑之美让人叹为观止。天坛则展现了古代中国精湛的建筑技艺和深邃的哲学思想。',
+      images: ['/uploads/media/images/beijing1.jpg', '/uploads/media/images/beijing2.jpg'],
+      videoUrl: null,
       author: users[0]._id,
       status: 'approved'
     });
@@ -107,9 +110,9 @@ const createSamplePosts = async (users) => {
     // 为user2创建一个待审核的游记
     const post2 = new Diary({
       title: '上海之行',
-      content: '上海是一个现代化的大都市，外滩的夜景非常美丽。',
-      images: ['/uploads/sample-shanghai.jpg'],
-      videoUrl: null,  // 使用正确的字段名
+      content: '上海是一个现代化的大都市，外滩的夜景非常美丽。站在浦东新区，望着黄浦江对岸林立的万国建筑群，灯光璀璨，美轮美奂。东方明珠、环球金融中心等现代建筑与古典建筑交相辉映，展现了上海这座城市独特的魅力。漫步南京路步行街，感受市井生活的烟火气息，品尝各色美食，让人流连忘返。',
+      images: ['/uploads/media/images/shanghai.jpg'],
+      videoUrl: null,
       author: users[1]._id,
       status: 'pending'
     });
@@ -124,12 +127,6 @@ const createSamplePosts = async (users) => {
   }
 };
 
-// 初始化示例图片
-const createSampleUploads = async () => {
-  console.log('注意: 在真实环境中，您需要手动将示例图片放入uploads目录');
-  console.log('在此示例数据中引用的图片路径仅作演示用途');
-};
-
 // 执行初始化
 const init = async () => {
   try {
@@ -137,9 +134,12 @@ const init = async () => {
     const admin = await createAdmin();
     const users = await createUsers();
     await createSamplePosts([...users, admin]);
-    await createSampleUploads();
     
     console.log('数据库初始化完成');
+    console.log('\n提示：请确保在 uploads/media/images 目录下放置以下图片文件：');
+    console.log('- beijing1.jpg      (北京游记图片1)');
+    console.log('- beijing2.jpg      (北京游记图片2)');
+    console.log('- shanghai.jpg      (上海游记图片)');
     process.exit(0);
   } catch (err) {
     console.error('初始化失败:', err);
