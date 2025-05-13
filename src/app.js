@@ -16,6 +16,7 @@ app.use(cors({
     'http://localhost:10086',
     'http://localhost:3000',
     'http://169.254.236.213:10086', // 添加移动端开发服务器域名
+    'http://10.99.128.5:10086', // 添加当前开发服务器域名
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
